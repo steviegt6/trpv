@@ -78,7 +78,7 @@ public class ValidateCommand : ICommand
             var levelName = message.Level.ToString().ToLowerInvariant();
 
             var sourceFile = message.FilePath ?? "";
-            var lineNumber = message.LineNumber.HasValue ? $" (line {message.LineNumber})" : "";
+            var lineNumber = message.Location.HasValue ? $" ({GetLocationString(message.Location.Value.Line, message.Location.Value.Column)})" : "";
             var location   = sourceFile + lineNumber;
             if (location.Length > 0)
             {
@@ -90,7 +90,27 @@ public class ValidateCommand : ICommand
                 AnsiConsole.Markup("    ");
             }
 
-            AnsiConsole.Markup($"[{levelColor}]{levelName} {message.Code}: [silver]{message.Message}[/][/]");
+            AnsiConsole.MarkupLine($"[{levelColor}]{levelName} {message.Code}: [silver]{message.Message}[/][/]");
+        }
+
+        static string GetLocationString(int? line, int? column)
+        {
+            if (!line.HasValue && !column.HasValue)
+            {
+                return "";
+            }
+
+            if (line.HasValue && !column.HasValue)
+            {
+                return $"(line {line})";
+            }
+
+            if (!line.HasValue && column.HasValue)
+            {
+                return $"(column {column})";
+            }
+
+            return $"({line},{column})";
         }
     }
 
