@@ -316,6 +316,10 @@ public sealed class ResourcePack(string path)
 
     private void ParseMusic(string contentPath)
     {
+        const string music_name = "Music_";
+        const int    music_min  = 1;
+        const int    music_max  = 92;
+
         var musicPath = System.IO.Path.Combine(contentPath, music_dir);
         if (!Directory.Exists(musicPath))
         {
@@ -324,6 +328,32 @@ public sealed class ResourcePack(string path)
         }
 
         Messages.TRPV0009.Add(this, null, null, musicPath, true);
+
+        var allowedExtensions = (List<string>) [".wav", ".mp3", ".ogg"];
+
+        var musicFiles = Directory.GetFiles(musicPath);
+        foreach (var musicFile in musicFiles)
+        {
+            var fileName = System.IO.Path.GetFileNameWithoutExtension(musicFile);
+            if (!fileName.StartsWith(music_name))
+            {
+                Messages.TRPV3001.Add(this, musicFile, null, music_min, music_max);
+                continue;
+            }
+
+            if (!int.TryParse(fileName[music_name.Length..], out var musicId) || musicId < music_min || musicId >= music_max)
+            {
+                Messages.TRPV3001.Add(this, musicFile, null, music_min, music_max);
+                continue;
+            }
+
+            if (!allowedExtensions.Contains(System.IO.Path.GetExtension(musicFile)))
+            {
+                Messages.TRPV3002.Add(this, musicFile, null, '[' + string.Join(", ", allowedExtensions) + ']');
+            }
+
+            // TODO: Add INFO diagnostic acknowledging validity?
+        }
     }
 
     private void ParseSounds(string contentPath)

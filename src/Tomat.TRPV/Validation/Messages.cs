@@ -29,6 +29,8 @@ public class DiagnosticWrapper(
 
 public static class Messages
 {
+    // 0000 - General diagnostics
+    
     public static readonly DiagnosticWrapper TRPV0001 = new(
         DiagnosticLevel.Error,
         "TRPV0001",
@@ -106,4 +108,24 @@ public static class Messages
         "TRPV0013",
         _ => "Cannot access icon '{0}'"
     );
+    
+    // 1000 - Images diagnostics
+    
+    // 2000 - Localization diagnostics
+    
+    // 3000 - Music diagnostics
+    
+    public static readonly DiagnosticWrapper TRPV3001 = new(
+        DiagnosticLevel.Error,
+        "TRPV3001",
+        _ => "Music file has an invalid name; must be Music_X where X is a number greater than or equal to {0} and less than {1}"
+    );
+    
+    public static readonly DiagnosticWrapper TRPV3002 = new(
+        DiagnosticLevel.Error,
+        "TRPV3002",
+        _ => "Music file has an invalid extension; allowed extensions: {0}"
+    );
+    
+    // 4000 - Sounds diagnostics
 }
