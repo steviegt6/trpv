@@ -30,7 +30,7 @@ public class DiagnosticWrapper(
 public static class Messages
 {
     // 0000 - General diagnostics
-    
+
     public static readonly DiagnosticWrapper TRPV0001 = new(
         DiagnosticLevel.Error,
         "TRPV0001",
@@ -102,39 +102,69 @@ public static class Messages
         "TRPV0012",
         _ => "Icon '{0}' is a valid PNG file"
     );
-    
+
     public static readonly DiagnosticWrapper TRPV0013 = new(
         DiagnosticLevel.Error,
         "TRPV0013",
         _ => "Cannot access icon '{0}'"
     );
-    
+
     // 1000 - Images diagnostics
-    
+
     // 2000 - Localization diagnostics
+
+    public static readonly DiagnosticWrapper TRPV2001 = new(
+        DiagnosticLevel.Error,
+        "TRPV2001",
+        _ => "Localization file begins with invalid language code or does not begin with a language code; must begin with one of the following: {0}"
+    );
+
+    public static readonly DiagnosticWrapper TRPV2002 = new(
+        DiagnosticLevel.Error,
+        "TRPV2002",
+        _ => "Localization file has an invalid extension; allowed extensions: {0}"
+    );
+
+    public static readonly DiagnosticWrapper TRPV2003 = new(
+        DiagnosticLevel.Error,
+        "TRPV2003",
+        _ => "Localization file has malformed JSON content: {0}"
+    );
     
+    public static readonly DiagnosticWrapper TRPV2004 = new(
+        DiagnosticLevel.Error,
+        "TRPV2004",
+        _ => "Localization file has malformed CSV content: {0}"
+    );
+    
+    public static readonly DiagnosticWrapper TRPV2005 = new(
+        DiagnosticLevel.Error,
+        "TRPV2005",
+        _ => "Localization file has an invalid key: {0}"
+    );
+
     // 3000 - Music diagnostics
-    
+
     public static readonly DiagnosticWrapper TRPV3001 = new(
         DiagnosticLevel.Error,
         "TRPV3001",
         _ => "Music file has an invalid name; must be Music_X where X is a number greater than or equal to {0} and less than {1}"
     );
-    
+
     public static readonly DiagnosticWrapper TRPV3002 = new(
         DiagnosticLevel.Error,
         "TRPV3002",
         _ => "Music file has an invalid extension; allowed extensions: {0}"
     );
-    
+
     // 4000 - Sounds diagnostics
-    
+
     public static readonly DiagnosticWrapper TRPV4001 = new(
         DiagnosticLevel.Error,
         "TRPV4001",
         _ => "Unrecognized sound file"
     );
-    
+
     public static readonly DiagnosticWrapper TRPV4002 = new(
         DiagnosticLevel.Error,
         "TRPV4002",

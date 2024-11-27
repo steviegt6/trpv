@@ -23,8 +23,11 @@ public sealed class ResourcePack(string path)
     private const string music_dir        = "Music";
     private const string sounds_dir       = "Sounds";
 
-    private static readonly string[] allowed_music_extensions = [".wav", ".mp3", ".ogg"];
-    private static readonly string[] allowed_sound_extensions = [".xnb"];
+    private static readonly string[] allowed_localization_extensions = [".json", ".csv"];
+    private static readonly string[] allowed_music_extensions        = [".wav", ".mp3", ".ogg"];
+    private static readonly string[] allowed_sound_extensions        = [".xnb"];
+
+    private static readonly string[] localization_codes = ["en-US", "de-DE", "it-IT", "fr-FR", "es-ES", "ru-RU", "zh-Hans", "pt-BR", "pl-PL"];
 
     public string Path => path;
 
@@ -316,6 +319,67 @@ public sealed class ResourcePack(string path)
         }
 
         Messages.TRPV0009.Add(this, null, null, localizationPath, true);
+
+        foreach (var localizationFile in Directory.GetFiles(localizationPath, "*", SearchOption.AllDirectories))
+        {
+            var ext = System.IO.Path.GetExtension(localizationFile);
+
+            if (!localization_codes.Any(x => System.IO.Path.GetFileName(localizationFile).StartsWith(x)))
+            {
+                Messages.TRPV2001.Add(this, localizationFile, null, '[' + string.Join(", ", localization_codes) + ']');
+            }
+
+            if (!allowed_localization_extensions.Contains(ext))
+            {
+                Messages.TRPV2002.Add(this, localizationFile, null, '[' + string.Join(", ", allowed_localization_extensions) + ']');
+            }
+
+            var properties = new List<string>();
+
+            if (ext == ".json")
+            {
+                try
+                {
+                    var localizationDoc = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(File.ReadAllText(localizationFile))!;
+                    foreach (var (key, value) in localizationDoc)
+                    {
+                        foreach (var (subKey, _) in value)
+                        {
+                            properties.Add($"{key}.{subKey}");
+                        }
+                    }
+                }
+                catch (JsonException e)
+                {
+                    Messages.TRPV2003.Add(this, localizationFile, ((int?)(e.LineNumber ?? null), null), e.Message);
+                }
+            }
+            else if (ext == ".csv")
+            {
+                var lines = File.ReadAllLines(localizationFile);
+                for (var i = 1; i < lines.Length; i++)
+                {
+                    var line  = lines[i];
+                    var parts = line.Split(',', 2);
+                    if (parts.Length < 2)
+                    {
+                        Messages.TRPV2004.Add(this, localizationFile, (i + 1, null), $"Got one or less parts (length: {parts.Length})");
+                    }
+                    else
+                    {
+                        properties.Add(parts[0]);
+                    }
+                }
+            }
+
+            foreach (var property in properties)
+            {
+                if (!ContentDump.LocalizationKeys.Contains(property))
+                {
+                    Messages.TRPV2005.Add(this, localizationFile, null, property);
+                }
+            }
+        }
     }
 
     private void ParseMusic(string contentPath)
