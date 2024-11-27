@@ -1,30 +1,38 @@
 using System.Collections.Generic;
+using System.IO;
 
 using Tomat.TRPV.Validation;
 
 namespace Tomat.TRPV;
 
-public abstract class ResourcePack
+public sealed class ResourcePack(string path)
 {
-    public IEnumerable<Message> Messages => messages;
+    public string Path => path;
 
-    private readonly List<Message> messages = [];
+    public ResourcePackManifest? Manifest { get; private set; }
 
-    public virtual void AddMessage(
-        MessageSeverity  severity,
-        MessageKind      kind,
-        string           text,
-        MessageSeverity? overridenSeverity = null
-    )
+    public IEnumerable<DiagnosticMessage> Diagnostics => diagnostics;
+
+    private readonly List<DiagnosticMessage> diagnostics = [];
+
+    public void AddMessage(DiagnosticMessage message)
     {
-        messages.Add(
-            new Message
-            {
-                Severity          = severity,
-                OverridenSeverity = overridenSeverity,
-                Kind              = kind,
-                Text              = text,
-            }
-        );
+        diagnostics.Add(message);
+    }
+
+    public void ResolveManifest()
+    {
+        // TODO: We can support passing the manifest JSON I guess.
+        if (File.Exists(Path))
+        {
+            Messages.TRPV0002.Add(this, null, null);
+            return;
+        }
+
+        if (!Directory.Exists(Path))
+        {
+            Messages.TRPV0001.Add(this, null, null);
+            return;
+        }
     }
 }
