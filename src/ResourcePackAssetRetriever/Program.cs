@@ -1,13 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Serialized;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 
 var terrariaDir = args[0];
 var gamePath    = Path.Combine(terrariaDir, "Terraria.exe");
 
+// Data to dump.
 var imageDimensions = new List<(string path, int width, int height)>();
+var maxMusicId      = -1;
 
 var module = ModuleDefinition.FromFile(gamePath);
 foreach (var resource in module.Resources)
@@ -64,4 +70,12 @@ foreach (var resource in module.Resources)
     }
 }
 
-_ = imageDimensions;
+var main      = module.TopLevelTypes.First(x => x.FullName == "Terraria.Main");
+var mainCctor = main.Methods.First(x => x.Name             == ".cctor");
+var cctorBody = (CilMethodBody)mainCctor.MethodBody!;
+
+var maxMusicStsfld = cctorBody.Instructions.First(x => x.OpCode == CilOpCodes.Stsfld && x.Operand is SerializedFieldDefinition field && field.Name == "maxMusic");
+var index          = cctorBody.Instructions.IndexOf(maxMusicStsfld);
+var ldci4          = cctorBody.Instructions[index - 1];
+
+maxMusicId = (sbyte)ldci4.Operand!;
