@@ -76,4 +76,10 @@ public static class Messages
         "TRPV0008",
         _ => "Parsed resource pack metadata; name: '{0}', author: '{1}', description: '{2}', version: {3}.{4}"
     );
+
+    public static readonly DiagnosticWrapper TRPV0009 = new(
+        DiagnosticLevel.Info,
+        "TRPV0009",
+        _ => "{0} directory found: '{1}'"
+    );
 }

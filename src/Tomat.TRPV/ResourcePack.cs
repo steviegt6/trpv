@@ -10,8 +10,12 @@ namespace Tomat.TRPV;
 
 public sealed class ResourcePack(string path)
 {
-    private const string pack_json   = "pack.json";
-    private const string content_dir = "Content";
+    private const string pack_json        = "pack.json";
+    private const string content_dir      = "Content";
+    private const string images_dir       = "Images";
+    private const string localization_dir = "Localization";
+    private const string music_dir        = "Music";
+    private const string sounds_dir       = "Sounds";
 
     public string Path => path;
 
@@ -234,5 +238,58 @@ public sealed class ResourcePack(string path)
             Messages.TRPV0007.Add(this, null, null, contentPath);
             return;
         }
+
+        ParseImages(contentPath);
+        ParseLocalization(contentPath);
+        ParseMusic(contentPath);
+        ParseSounds(contentPath);
+    }
+
+    private void ParseImages(string contentPath)
+    {
+        var imagesPath = System.IO.Path.Combine(contentPath, images_dir);
+        if (!Directory.Exists(imagesPath))
+        {
+            Messages.TRPV0009.Add(this, null, null, imagesPath, false);
+            return;
+        }
+
+        Messages.TRPV0009.Add(this, null, null, imagesPath, true);
+    }
+
+    private void ParseLocalization(string contentPath)
+    {
+        var localizationPath = System.IO.Path.Combine(contentPath, localization_dir);
+        if (!Directory.Exists(localizationPath))
+        {
+            Messages.TRPV0009.Add(this, null, null, localizationPath, false);
+            return;
+        }
+
+        Messages.TRPV0009.Add(this, null, null, localizationPath, true);
+    }
+
+    private void ParseMusic(string contentPath)
+    {
+        var musicPath = System.IO.Path.Combine(contentPath, music_dir);
+        if (!Directory.Exists(musicPath))
+        {
+            Messages.TRPV0009.Add(this, null, null, musicPath, false);
+            return;
+        }
+
+        Messages.TRPV0009.Add(this, null, null, musicPath, true);
+    }
+
+    private void ParseSounds(string contentPath)
+    {
+        var soundsPath = System.IO.Path.Combine(contentPath, sounds_dir);
+        if (!Directory.Exists(soundsPath))
+        {
+            Messages.TRPV0009.Add(this, null, null, soundsPath, false);
+            return;
+        }
+
+        Messages.TRPV0009.Add(this, null, null, soundsPath, true);
     }
 }
