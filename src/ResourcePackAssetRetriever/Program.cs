@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -11,9 +12,10 @@ var terrariaDir = args[0];
 var gamePath    = Path.Combine(terrariaDir, "Terraria.exe");
 
 // Data to dump.
-var imageDimensions = new List<(string path, int width, int height)>();
-var maxMusicId      = -1;
-var sounds          = new List<string>();
+var localizationKeys = new List<string>();
+var imageDimensions  = new List<(string path, int width, int height)>();
+var maxMusicId       = -1;
+var sounds           = new List<string>();
 
 var module = ModuleDefinition.FromFile(gamePath);
 foreach (var resource in module.Resources)
@@ -40,6 +42,27 @@ foreach (var resource in module.Resources)
             if (localization)
             {
                 // Find localization data.
+
+                var json = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(
+                    text,
+                    new JsonSerializerOptions
+                    {
+                        ReadCommentHandling = JsonCommentHandling.Skip,
+                        AllowTrailingCommas = true,
+                    }
+                );
+                if (json is null)
+                {
+                    continue;
+                }
+
+                foreach (var (key, value) in json)
+                {
+                    foreach (var (subKey, _) in value)
+                    {
+                        localizationKeys.Add($"{key}.{subKey}");
+                    }
+                }
             }
             else
             {
@@ -90,3 +113,19 @@ foreach (var resource in module.Resources)
 
     sounds.AddRange(soundFiles.Select(x => x[(soundDir.Length + 1)..]));
 }
+
+// Dump data to a JSON file.
+var dumpJson = JsonSerializer.Serialize(
+    new
+    {
+        LocalizationKeys = localizationKeys,
+        ImageDimensions  = imageDimensions.ToDictionary(x => x.path, x => new { Height = x.height, Width = x.width }),
+        MaxMusicId       = maxMusicId,
+        Sounds           = sounds.Select(x => x.Replace('\\', '/')),
+    },
+    new JsonSerializerOptions
+    {
+        WriteIndented = true,
+    }
+);
+await File.WriteAllTextAsync("dump.json", dumpJson);
