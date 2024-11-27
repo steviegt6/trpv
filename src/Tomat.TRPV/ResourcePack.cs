@@ -353,6 +353,7 @@ public sealed class ResourcePack(string path)
             }
 
             // TODO: Add INFO diagnostic acknowledging validity?
+            // TODO: Check file validity; are they corrupted?
         }
     }
 
