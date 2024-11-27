@@ -82,3 +82,11 @@ foreach (var resource in module.Resources)
 
     maxMusicId = (sbyte)ldci4.Operand!;
 }
+
+// Find sounds.
+{
+    var soundDir   = Path.Combine(terrariaDir, "Content", "Sounds");
+    var soundFiles = Directory.GetFiles(soundDir, "*.xnb", SearchOption.AllDirectories);
+
+    sounds.AddRange(soundFiles.Select(x => x[(soundDir.Length + 1)..]));
+}
