@@ -1,34 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
 
-var items = new List<(string path, int width, int height)>();
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Serialized;
 
 var terrariaDir = args[0];
+var gamePath    = Path.Combine(terrariaDir, "Terraria.exe");
 
-var gameAsmPath = Path.Combine(terrariaDir, "Terraria.exe");
+var imageDimensions = new List<(string path, int width, int height)>();
 
-using var asmStream   = File.OpenRead(gameAsmPath);
-using var asmPeReader = new PEReader(asmStream);
-
-var metadataReader = asmPeReader.GetMetadataReader();
-
-foreach (var entryHandle in metadataReader.ManifestResources)
+var module = ModuleDefinition.FromFile(gamePath);
+foreach (var resource in module.Resources)
 {
-    var resource     = metadataReader.GetManifestResource(entryHandle);
-    var resourceName = metadataReader.GetString(resource.Name);
-
-    if (!resource.Implementation.IsNil)
+    if (resource is not SerializedManifestResource)
     {
         continue;
     }
 
-    var resOffset    = asmPeReader.PEHeaders.CorHeader!.ResourcesDirectory.RelativeVirtualAddress;
-    var resourceData = asmPeReader.GetSectionData(resOffset + (int)resource.Offset).GetReader();
-
-    switch (resourceName)
+    switch (resource.Name)
     {
         case "Terraria.IO.Data.ResourcePacksDefaultInfo.tsv":
         case "Terraria.Localization.Content.en-US.Game.json":
@@ -38,36 +27,41 @@ foreach (var entryHandle in metadataReader.ManifestResources)
         case "Terraria.Localization.Content.en-US.NPCs.json":
         case "Terraria.Localization.Content.en-US.Projectiles.json":
         case "Terraria.Localization.Content.en-US.Town.json":
-        {
-            using var resourceStream = new MemoryStream(resourceData.ReadBytes(resourceData.Length));
-            using var stringReader   = new StreamReader(resourceStream);
-            var       text           = stringReader.ReadToEnd();
+            var data = resource.GetData()!;
+            var text = new StreamReader(new MemoryStream(data)).ReadToEnd();
 
-            var isLocalization = resourceName.EndsWith(".json");
-
-            if (isLocalization)
+            var localization = resource.Name.Value.EndsWith(".json");
+            if (localization)
             {
-                // Export properties from localization files.
+                // Extract localization data.
             }
             else
             {
-                // Export item dimensions from ResourcePacksDefaultInfo.tsv.
+                // Extract image dimension data.
 
-                var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                var lines = text.Split("\r\n");
                 foreach (var line in lines)
                 {
-                    var parts  = line.Split('\t');
-                    var name   = parts[0];
+                    if (line == "Path\tWidth\tHeight")
+                    {
+                        continue;
+                    }
+
+                    var parts = line.Split('\t');
+                    if (parts.Length < 3)
+                    {
+                        continue;
+                    }
+
+                    var path   = parts[0];
                     var width  = int.Parse(parts[1]);
                     var height = int.Parse(parts[2]);
 
-                    items.Add((name, width, height));
+                    imageDimensions.Add((path, width, height));
                 }
             }
-
             break;
-        }
     }
 }
 
-_ = items;
+_ = imageDimensions;
