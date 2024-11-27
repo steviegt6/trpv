@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace Tomat.TRPV;
@@ -28,6 +29,12 @@ internal static class ContentDump
     public static int MaxMusicId => dump.MaxMusicId;
 
     public static string[] Sounds => dump.Sounds;
+
+    public static Dictionary<string, Dimensions> ImageDimensionsLowerInvariant =>
+        dump.ImageDimensions.ToDictionary(
+            kvp => kvp.Key.ToLowerInvariant(),
+            kvp => kvp.Value
+        );
 
     private static readonly Dump dump;
 

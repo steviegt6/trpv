@@ -313,10 +313,18 @@ public sealed class ResourcePack(string path)
             var fileName = imageFile;
             GetSimplifiedFileName(imagesPath, ref fileName, out var fileNameNoExt);
 
-            if (!ContentDump.ImageDimensions.ContainsKey("Images/" + fileNameNoExt))
+            if (!ContentDump.ImageDimensions.TryGetValue("Images/" + fileNameNoExt, out var dimensions))
             {
-                Messages.TRPV1001.Add(this, imageFile, null);
-                continue;
+                // check invariant casing
+                if (ContentDump.ImageDimensionsLowerInvariant.TryGetValue("images/" + fileNameNoExt.ToLowerInvariant(), out dimensions))
+                {
+                    Messages.TRPV1005.Add(this, imageFile, null);
+                }
+                else
+                {
+                    Messages.TRPV1001.Add(this, imageFile, null);
+                    continue;
+                }
             }
 
             if (!allowed_image_extensions.Contains(System.IO.Path.GetExtension(imageFile)))
@@ -328,7 +336,6 @@ public sealed class ResourcePack(string path)
             {
                 using var image = Image.Load<Rgba32>(imageFile);
 
-                var dimensions = ContentDump.ImageDimensions["Images/" + fileNameNoExt];
                 if (dimensions.Width != image.Width || dimensions.Height != image.Height)
                 {
                     Messages.TRPV1004.Add(this, imageFile, null, dimensions.Width, dimensions.Height, image.Width, image.Height);

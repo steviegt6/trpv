@@ -134,6 +134,12 @@ public static class Messages
         "TRPV1004",
         _ => "Image dimensions do not match; expected: ({0}x{1}), got: ({2}x{3})"
     );
+    
+    public static readonly DiagnosticWrapper TRPV1005 = new(
+        DiagnosticLevel.Warn,
+        "TRPV1005",
+        _ => "Recognized image file, but incorrect casing"
+    );
 
     // 2000 - Localization diagnostics
 
