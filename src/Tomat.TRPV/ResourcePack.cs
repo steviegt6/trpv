@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 using Tomat.TRPV.Validation;
 
@@ -195,12 +194,10 @@ public sealed class ResourcePack(string path)
         catch (UnauthorizedAccessException)
         {
             Messages.TRPV0004.Add(this, null, null, manifestPath);
-            return;
         }
         catch (SecurityException)
         {
             Messages.TRPV0004.Add(this, null, null, manifestPath);
-            return;
         }
         catch (JsonException e)
         {
