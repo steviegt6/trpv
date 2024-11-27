@@ -340,7 +340,14 @@ public sealed class ResourcePack(string path)
             {
                 try
                 {
-                    var localizationDoc = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(File.ReadAllText(localizationFile))!;
+                    var localizationDoc = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(
+                        File.ReadAllText(localizationFile),
+                        new JsonSerializerOptions
+                        {
+                            ReadCommentHandling = JsonCommentHandling.Skip,
+                            AllowTrailingCommas = true,
+                        }
+                    )!;
                     foreach (var (key, value) in localizationDoc)
                     {
                         foreach (var (subKey, _) in value)
