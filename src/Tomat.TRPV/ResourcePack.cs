@@ -4,6 +4,10 @@ using System.IO;
 using System.Security;
 using System.Text.Json;
 
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
+
 using Tomat.TRPV.Validation;
 
 namespace Tomat.TRPV;
@@ -11,6 +15,7 @@ namespace Tomat.TRPV;
 public sealed class ResourcePack(string path)
 {
     private const string pack_json        = "pack.json";
+    private const string icon_png         = "icon.png";
     private const string content_dir      = "Content";
     private const string images_dir       = "Images";
     private const string localization_dir = "Localization";
@@ -228,6 +233,46 @@ public sealed class ResourcePack(string path)
             Manifest?.VersionMajor,
             Manifest?.VersionMinor
         );
+    }
+
+    public void ParseIcon()
+    {
+        var iconPath = System.IO.Path.Combine(Path, icon_png);
+        if (!File.Exists(iconPath))
+        {
+            Messages.TRPV0010.Add(this, null, null, iconPath);
+            return;
+        }
+
+        try
+        {
+            using var iconStream = File.OpenRead(iconPath);
+            using var image      = Image.Load<Rgba32>(iconStream);
+
+            // I'm lazy, and I am letting SixLabors determine what decoder to
+            // use.  Technically, it can properly decode an icon.png that's
+            // actually a different format such as JPEG.
+            if (!image.Metadata.TryGetPngMetadata(out _))
+            {
+                Messages.TRPV0011.Add(this, null, null, iconPath);
+            }
+
+            // Assume the icon is fine at this point.
+            // TODO: We can check for good sizes later.
+            Messages.TRPV0012.Add(this, null, null, iconPath);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Messages.TRPV0013.Add(this, null, null, iconPath);
+        }
+        catch (InvalidImageContentException)
+        {
+            Messages.TRPV0011.Add(this, null, null, iconPath);
+        }
+        catch (UnknownImageFormatException)
+        {
+            Messages.TRPV0011.Add(this, null, null, iconPath);
+        }
     }
 
     public void ParseContent()

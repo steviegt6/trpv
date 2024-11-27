@@ -82,4 +82,28 @@ public static class Messages
         "TRPV0009",
         _ => "{0} directory found: '{1}'"
     );
+
+    public static readonly DiagnosticWrapper TRPV0010 = new(
+        DiagnosticLevel.Warn,
+        "TRPV0010",
+        _ => "Icon '{0}' not found"
+    );
+
+    public static readonly DiagnosticWrapper TRPV0011 = new(
+        DiagnosticLevel.Error,
+        "TRPV0011",
+        _ => "Icon '{0}' is not a valid PNG file"
+    );
+
+    public static readonly DiagnosticWrapper TRPV0012 = new(
+        DiagnosticLevel.Info,
+        "TRPV0012",
+        _ => "Icon '{0}' is a valid PNG file"
+    );
+    
+    public static readonly DiagnosticWrapper TRPV0013 = new(
+        DiagnosticLevel.Error,
+        "TRPV0013",
+        _ => "Cannot access icon '{0}'"
+    );
 }

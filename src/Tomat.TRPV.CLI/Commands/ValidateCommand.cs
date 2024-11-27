@@ -29,6 +29,7 @@ public class ValidateCommand : ICommand
         var resourcePack = ResolveResourcePack(ResourcePack);
         {
             resourcePack.ResolveManifest();
+            resourcePack.ParseIcon();
             resourcePack.ParseContent();
         }
         sw.Stop();
