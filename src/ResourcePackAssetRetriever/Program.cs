@@ -121,7 +121,7 @@ var dumpJson = JsonSerializer.Serialize(
         LocalizationKeys = localizationKeys,
         ImageDimensions  = imageDimensions.ToDictionary(x => x.path, x => new { Height = x.height, Width = x.width }),
         MaxMusicId       = maxMusicId,
-        Sounds           = sounds.Select(x => x.Replace('\\', '/')),
+        Sounds           = sounds.Select(x => x.Replace('\\', '/')[..^".xnb".Length]),
     },
     new JsonSerializerOptions
     {

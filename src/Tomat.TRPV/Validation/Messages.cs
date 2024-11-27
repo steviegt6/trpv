@@ -128,4 +128,16 @@ public static class Messages
     );
     
     // 4000 - Sounds diagnostics
+    
+    public static readonly DiagnosticWrapper TRPV4001 = new(
+        DiagnosticLevel.Error,
+        "TRPV4001",
+        _ => "Unrecognized sound file"
+    );
+    
+    public static readonly DiagnosticWrapper TRPV4002 = new(
+        DiagnosticLevel.Error,
+        "TRPV4002",
+        _ => "Sound file has an invalid extension; allowed extensions: {0}"
+    );
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Text.Json;
 
@@ -21,6 +22,9 @@ public sealed class ResourcePack(string path)
     private const string localization_dir = "Localization";
     private const string music_dir        = "Music";
     private const string sounds_dir       = "Sounds";
+
+    private static readonly string[] allowed_music_extensions = [".wav", ".mp3", ".ogg"];
+    private static readonly string[] allowed_sound_extensions = [".xnb"];
 
     public string Path => path;
 
@@ -318,7 +322,6 @@ public sealed class ResourcePack(string path)
     {
         const string music_name = "Music_";
         const int    music_min  = 1;
-        const int    music_max  = 92;
 
         var musicPath = System.IO.Path.Combine(contentPath, music_dir);
         if (!Directory.Exists(musicPath))
@@ -329,27 +332,25 @@ public sealed class ResourcePack(string path)
 
         Messages.TRPV0009.Add(this, null, null, musicPath, true);
 
-        var allowedExtensions = (List<string>) [".wav", ".mp3", ".ogg"];
-
         var musicFiles = Directory.GetFiles(musicPath);
         foreach (var musicFile in musicFiles)
         {
             var fileName = System.IO.Path.GetFileNameWithoutExtension(musicFile);
             if (!fileName.StartsWith(music_name))
             {
-                Messages.TRPV3001.Add(this, musicFile, null, music_min, music_max);
+                Messages.TRPV3001.Add(this, musicFile, null, music_min, ContentDump.MaxMusicId);
                 continue;
             }
 
-            if (!int.TryParse(fileName[music_name.Length..], out var musicId) || musicId < music_min || musicId >= music_max)
+            if (!int.TryParse(fileName[music_name.Length..], out var musicId) || musicId < music_min || musicId >= ContentDump.MaxMusicId)
             {
-                Messages.TRPV3001.Add(this, musicFile, null, music_min, music_max);
+                Messages.TRPV3001.Add(this, musicFile, null, music_min, ContentDump.MaxMusicId);
                 continue;
             }
 
-            if (!allowedExtensions.Contains(System.IO.Path.GetExtension(musicFile)))
+            if (!allowed_music_extensions.Contains(System.IO.Path.GetExtension(musicFile)))
             {
-                Messages.TRPV3002.Add(this, musicFile, null, '[' + string.Join(", ", allowedExtensions) + ']');
+                Messages.TRPV3002.Add(this, musicFile, null, '[' + string.Join(", ", allowed_music_extensions) + ']');
             }
 
             // TODO: Add INFO diagnostic acknowledging validity?
@@ -367,5 +368,32 @@ public sealed class ResourcePack(string path)
         }
 
         Messages.TRPV0009.Add(this, null, null, soundsPath, true);
+
+        foreach (var soundFile in Directory.GetFiles(soundsPath, "*", SearchOption.AllDirectories))
+        {
+            var fileName = soundFile[(soundsPath.Length + 1)..];
+            fileName = fileName.Replace('\\', '/');
+
+            // I particularly hate this and wish the standard library had a way
+            // to deal with this.  Get the file name minus the extension.  We
+            // can't JUST use GetFileNameWithoutExtension because it doesn't
+            // handle directories.  Instead, we gotta mash it together.  If
+            // there is no directory, Combine behaves weird.  Ugh.
+            var fileNameNoExt = System.IO.Path.GetDirectoryName(fileName) is { } dirName
+                ? System.IO.Path.Combine(dirName, System.IO.Path.GetFileNameWithoutExtension(fileName))
+                : System.IO.Path.GetFileNameWithoutExtension(fileName);
+            fileNameNoExt = fileNameNoExt.Replace('\\', '/');
+
+            if (!ContentDump.Sounds.Contains(fileNameNoExt))
+            {
+                Messages.TRPV4001.Add(this, soundFile, null);
+                continue;
+            }
+
+            if (!allowed_sound_extensions.Contains(System.IO.Path.GetExtension(soundFile)))
+            {
+                Messages.TRPV4002.Add(this, soundFile, null, '[' + string.Join(", ", allowed_sound_extensions) + ']');
+            }
+        }
     }
 }

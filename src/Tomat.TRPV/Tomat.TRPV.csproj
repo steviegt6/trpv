@@ -7,7 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Resources\dump.json"/>
+        <EmbeddedResource Include="Resources\dump.json"/>
     </ItemGroup>
 
 </Project>
