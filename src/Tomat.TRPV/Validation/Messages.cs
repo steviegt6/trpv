@@ -64,4 +64,16 @@ public static class Messages
         "TRPV0006",
         _ => "Invalid pack manifest: {0}"
     );
+
+    public static readonly DiagnosticWrapper TRPV0007 = new(
+        DiagnosticLevel.Error,
+        "TRPV0007",
+        _ => "Resource pack does not have Content folder '{0}'"
+    );
+
+    public static readonly DiagnosticWrapper TRPV0008 = new(
+        DiagnosticLevel.Info,
+        "TRPV0008",
+        _ => "Parsed resource pack metadata; name: '{0}', author: '{1}', description: '{2}', version: {3}.{4}"
+    );
 }

@@ -29,23 +29,26 @@ public class ValidateCommand : ICommand
         var resourcePack = ResolveResourcePack(ResourcePack);
         {
             resourcePack.ResolveManifest();
+            resourcePack.ParseContent();
         }
         sw.Stop();
 
-        WriteDiagnostics(resourcePack, sw.Elapsed);
+        WriteDiagnostics(resourcePack, sw.Elapsed, out var failed);
+        Environment.Exit(failed ? 1 : 0);
         return default(ValueTask);
 
         static void WriteDiagnostics(
             ResourcePack resourcePack,
-            TimeSpan     elapsed
+            TimeSpan     elapsed,
+            out bool     failed
         )
         {
             var elapsedFormatted = elapsed.TotalSeconds < 1
                 ? $"{elapsed.TotalMilliseconds}ms"
                 : $"{elapsed.TotalSeconds}s";
 
-            var rpName      = resourcePack.Manifest?.Name ?? "<unknown>";
-            var failed      = resourcePack.Diagnostics.Any(x => x.Level == DiagnosticLevel.Error);
+            var rpName = resourcePack.Manifest?.Name ?? "<unknown>";
+            failed = resourcePack.Diagnostics.Any(x => x.Level == DiagnosticLevel.Error);
             var statusColor = failed ? "red" : "green";
 
             var errorCount = resourcePack.Diagnostics.Count(x => x.Level == DiagnosticLevel.Error);
@@ -53,6 +56,11 @@ public class ValidateCommand : ICommand
 
             AnsiConsole.MarkupLine($"[white]{rpName} [{statusColor}]{(failed ? "failed" : "succeeded")} with {errorCount} error(s) and {warnCount} warning(s)[/] ({elapsedFormatted})[/]");
             {
+                foreach (var info in resourcePack.Diagnostics.Where(x => x.Level == DiagnosticLevel.Info))
+                {
+                    PrintDiagnostic(info);
+                }
+
                 foreach (var warning in resourcePack.Diagnostics.Where(x => x.Level == DiagnosticLevel.Warn))
                 {
                     PrintDiagnostic(warning);
@@ -69,7 +77,7 @@ public class ValidateCommand : ICommand
         {
             var levelColor = message.Level switch
             {
-                DiagnosticLevel.Info  => "white",
+                DiagnosticLevel.Info  => "blue",
                 DiagnosticLevel.Warn  => "yellow",
                 DiagnosticLevel.Error => "red",
                 _                     => throw new ArgumentOutOfRangeException(),
@@ -78,7 +86,7 @@ public class ValidateCommand : ICommand
             var levelName = message.Level.ToString().ToLowerInvariant();
 
             var sourceFile = message.FilePath ?? "";
-            var lineNumber = message.Location.HasValue ? $" ({GetLocationString(message.Location.Value.Line, message.Location.Value.Column)})" : "";
+            var lineNumber = message.Location.HasValue ? $"{GetLocationString(message.Location.Value.Line, message.Location.Value.Column)}" : "";
             var location   = sourceFile + lineNumber;
             if (location.Length > 0)
             {
@@ -90,7 +98,7 @@ public class ValidateCommand : ICommand
                 AnsiConsole.Markup("    ");
             }
 
-            AnsiConsole.MarkupLine($"[{levelColor}]{levelName} {message.Code}: [silver]{message.Message}[/][/]");
+            AnsiConsole.MarkupLine($"[{levelColor}]{levelName} {message.Code}: [silver]{message.Message.Replace("[", "[[").Replace("]", "]]")}[/][/]");
         }
 
         static string GetLocationString(int? line, int? column)

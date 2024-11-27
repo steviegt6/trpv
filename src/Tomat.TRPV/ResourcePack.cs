@@ -10,7 +10,8 @@ namespace Tomat.TRPV;
 
 public sealed class ResourcePack(string path)
 {
-    private const string pack_json = "pack.json";
+    private const string pack_json   = "pack.json";
+    private const string content_dir = "Content";
 
     public string Path => path;
 
@@ -58,7 +59,16 @@ public sealed class ResourcePack(string path)
             var manifestText = File.ReadAllText(manifestPath);
 
             // We parse it manually so we can give rich errors upon failure.
-            var manifestDoc = JsonDocument.Parse(manifestText);
+            var manifestDoc = JsonDocument.Parse(
+                manifestText,
+                new JsonDocumentOptions
+                {
+                    // Vanilla Terraria permits comments in JSON and trailing
+                    // commas since Newtonsoft.Json's default handling does.
+                    CommentHandling     = JsonCommentHandling.Skip,
+                    AllowTrailingCommas = true,
+                }
+            );
 
             // Manually get each property.
             // Minimal viable pack.json must include values for Name, Author,
@@ -202,6 +212,27 @@ public sealed class ResourcePack(string path)
         catch (JsonException e)
         {
             Messages.TRPV0005.Add(this, manifestPath, ((int?)(e.LineNumber ?? null), null), e.Message);
+        }
+
+        Messages.TRPV0008.Add(
+            this,
+            manifestPath,
+            null,
+            Manifest?.Name,
+            Manifest?.Name,
+            Manifest?.Description?.Replace("\n", "\\n").Replace("\r", "\\r"),
+            Manifest?.VersionMajor,
+            Manifest?.VersionMinor
+        );
+    }
+
+    public void ParseContent()
+    {
+        var contentPath = System.IO.Path.Combine(Path, content_dir);
+        if (!Directory.Exists(contentPath))
+        {
+            Messages.TRPV0007.Add(this, null, null, contentPath);
+            return;
         }
     }
 }
