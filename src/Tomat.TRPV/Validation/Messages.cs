@@ -110,6 +110,30 @@ public static class Messages
     );
 
     // 1000 - Images diagnostics
+    
+    public static readonly DiagnosticWrapper TRPV1001 = new(
+        DiagnosticLevel.Error,
+        "TRPV1001",
+        _ => "Unrecognized image file"
+    );
+    
+    public static readonly DiagnosticWrapper TRPV1002 = new(
+        DiagnosticLevel.Error,
+        "TRPV1002",
+        _ => "Image file has an invalid extension; allowed extensions: {0}"
+    );
+    
+    public static readonly DiagnosticWrapper TRPV1003 = new(
+        DiagnosticLevel.Error,
+        "TRPV1003",
+        _ => "The image was unable to be parsed"
+    );
+    
+    public static readonly DiagnosticWrapper TRPV1004 = new(
+        DiagnosticLevel.Error,
+        "TRPV1004",
+        _ => "Image dimensions do not match; expected: ({0}x{1}), got: ({2}x{3})"
+    );
 
     // 2000 - Localization diagnostics
 

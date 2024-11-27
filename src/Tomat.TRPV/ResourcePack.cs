@@ -6,7 +6,6 @@ using System.Security;
 using System.Text.Json;
 
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
 using Tomat.TRPV.Validation;
@@ -23,6 +22,7 @@ public sealed class ResourcePack(string path)
     private const string music_dir        = "Music";
     private const string sounds_dir       = "Sounds";
 
+    private static readonly string[] allowed_image_extensions        = [".png"];
     private static readonly string[] allowed_localization_extensions = [".json", ".csv"];
     private static readonly string[] allowed_music_extensions        = [".wav", ".mp3", ".ogg"];
     private static readonly string[] allowed_sound_extensions        = [".xnb"];
@@ -307,6 +307,42 @@ public sealed class ResourcePack(string path)
         }
 
         Messages.TRPV0009.Add(this, null, null, imagesPath, true);
+
+        foreach (var imageFile in Directory.GetFiles(imagesPath, "*", SearchOption.AllDirectories))
+        {
+            var fileName = imageFile;
+            GetSimplifiedFileName(imagesPath, ref fileName, out var fileNameNoExt);
+
+            if (!ContentDump.ImageDimensions.ContainsKey("Images/" + fileNameNoExt))
+            {
+                Messages.TRPV1001.Add(this, imageFile, null);
+                continue;
+            }
+
+            if (!allowed_image_extensions.Contains(System.IO.Path.GetExtension(imageFile)))
+            {
+                Messages.TRPV1002.Add(this, imageFile, null, '[' + string.Join(", ", allowed_image_extensions) + ']');
+            }
+
+            try
+            {
+                using var image = Image.Load<Rgba32>(imageFile);
+
+                var dimensions = ContentDump.ImageDimensions["Images/" + fileNameNoExt];
+                if (dimensions.Width != image.Width || dimensions.Height != image.Height)
+                {
+                    Messages.TRPV1004.Add(this, imageFile, null, dimensions.Width, dimensions.Height, image.Width, image.Height);
+                }
+            }
+            catch (InvalidImageContentException)
+            {
+                Messages.TRPV1003.Add(this, imageFile, null);
+            }
+            catch (UnknownImageFormatException)
+            {
+                Messages.TRPV1003.Add(this, imageFile, null);
+            }
+        }
     }
 
     private void ParseLocalization(string contentPath)
@@ -442,18 +478,8 @@ public sealed class ResourcePack(string path)
 
         foreach (var soundFile in Directory.GetFiles(soundsPath, "*", SearchOption.AllDirectories))
         {
-            var fileName = soundFile[(soundsPath.Length + 1)..];
-            fileName = fileName.Replace('\\', '/');
-
-            // I particularly hate this and wish the standard library had a way
-            // to deal with this.  Get the file name minus the extension.  We
-            // can't JUST use GetFileNameWithoutExtension because it doesn't
-            // handle directories.  Instead, we gotta mash it together.  If
-            // there is no directory, Combine behaves weird.  Ugh.
-            var fileNameNoExt = System.IO.Path.GetDirectoryName(fileName) is { } dirName
-                ? System.IO.Path.Combine(dirName, System.IO.Path.GetFileNameWithoutExtension(fileName))
-                : System.IO.Path.GetFileNameWithoutExtension(fileName);
-            fileNameNoExt = fileNameNoExt.Replace('\\', '/');
+            var fileName = soundFile;
+            GetSimplifiedFileName(soundsPath, ref fileName, out var fileNameNoExt);
 
             if (!ContentDump.Sounds.Contains(fileNameNoExt))
             {
@@ -466,5 +492,21 @@ public sealed class ResourcePack(string path)
                 Messages.TRPV4002.Add(this, soundFile, null, '[' + string.Join(", ", allowed_sound_extensions) + ']');
             }
         }
+    }
+
+    private static void GetSimplifiedFileName(string fileDir, ref string fileName, out string fileNameNoExt)
+    {
+        fileName = fileName[(fileDir.Length + 1)..];
+        fileName = fileName.Replace('\\', '/');
+
+        // I particularly hate this and wish the standard library had a way
+        // to deal with this.  Get the file name minus the extension.  We
+        // can't JUST use GetFileNameWithoutExtension because it doesn't
+        // handle directories.  Instead, we gotta mash it together.  If
+        // there is no directory, Combine behaves weird.  Ugh.
+        fileNameNoExt = System.IO.Path.GetDirectoryName(fileName) is { } dirName
+            ? System.IO.Path.Combine(dirName, System.IO.Path.GetFileNameWithoutExtension(fileName))
+            : System.IO.Path.GetFileNameWithoutExtension(fileName);
+        fileNameNoExt = fileNameNoExt.Replace('\\', '/');
     }
 }
